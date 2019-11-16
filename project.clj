@@ -3,7 +3,6 @@
   :url "http://example.com/FIXME"
   :license {:name "MIT Licence"
             :url "https://opensource.org/licenses/MIT"}
-  :dependencies [[org.clojure/clojure "1.10.0"]]
-  :repl-options {:init-ns os-simulator.main}
+  :dependencies [[org.clojure/clojure "1.8.0"]]
   :main ^{:skip-aot true} os-simulator.main)
 

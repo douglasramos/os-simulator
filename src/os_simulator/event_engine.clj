@@ -1,5 +1,6 @@
 (ns os-simulator.event-engine
-  (:require [os-simulator.processor :as p]))
+  (:require [os-simulator.processor :as p]
+            [os-simulator.memory :as m]))
 
 (defn sim-ended?
   "returns if the simulation has ended"
@@ -50,12 +51,24 @@
         (remove-first-event)
         (event->handled-list event))))
 
+;(def get-action
+;  {:spooling          p/spooling
+;   :job-scheduling    p/job-scheduling
+;   :memory-allocation m/memory-allocation
+;   :cpu-execution
+;                      :disk-release
+;   :io-interruption
+;                      :job-finishing}
+;  )
+
 (def get-action
-  {:spooling p/spooling})
+  {:spooling          p/spooling
+   :job-scheduling    p/job-scheduling
+   :memory-allocation m/memory-allocation})
 
 ;; TODO improve this method. Make more clear
 (defn execute
-  "Execute the event engine by one iteration return a new
+  "Execute the event engine by one iteration and return a new
   event engine that represents the new state os the simulation"
   [event-engine]
   (let [current-event (next-event event-engine)

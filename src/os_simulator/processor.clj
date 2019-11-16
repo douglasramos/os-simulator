@@ -1,8 +1,13 @@
-(ns os-simulator.processor)
+(ns os-simulator.processor
+  (:require [os-simulator.disk :as d]))
 
-(def num-jobs 5)
 
 (defn spooling
   "spooling event. (1)"
+  [event-engine]
+  event-engine)
+
+(defn job-scheduling
+  "docstring"
   [event-engine]
   event-engine)
