@@ -9,19 +9,12 @@
       (empty? (:events event-engine))))
 
 
-(defn add-new-event
-  "return new event-engine with a new list with new event included"
-  [event-engine new-event]
-  (let [events (conj (:events event-engine) new-event)
-        sorted-events (into () (sort-by #(> %1 %2) :time events))]
-    (assoc event-engine :events sorted-events)))
-
 (defn new-event-engine [max-duration]
   {:duration       max-duration
    :current-time   0
-   :currentEvent   0
    :events         ()
-   :handled-events []})
+   :handled-events []
+   :jobs           []})
 
 (defn get-first-event
   "return the first event from the events list"
@@ -51,6 +44,10 @@
         (remove-first-event)
         (event->handled-list event))))
 
+(defn set-current-event
+  [event-engine event]
+  (assoc event-engine :current-event event))
+
 ;(def get-action
 ;  {:spooling          p/spooling
 ;   :job-scheduling    p/job-scheduling
@@ -63,8 +60,8 @@
 
 (def get-action
   {:spooling          p/spooling
-   :job-scheduling    p/job-scheduling
-   :memory-allocation m/memory-allocation})
+   :job-scheduling m/job-scheduling
+   :processor-allocation m/processor-allocation})
 
 ;; TODO improve this method. Make more clear
 (defn execute
@@ -72,7 +69,9 @@
   event engine that represents the new state os the simulation"
   [event-engine memory processor io]
   (let [current-event (next-event event-engine)
-        event-engine (current-event->handled-list event-engine)
+        event-engine (-> event-engine
+                         (set-current-event current-event)
+                         (current-event->handled-list))
         key-word (:type current-event)
         action (key-word get-action)]
     (action [event-engine memory processor io])))

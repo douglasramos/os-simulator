@@ -18,7 +18,7 @@
   "Mode 1: runs a simulation with a auto-generated jobs
   and runs without user interaction"
   (let [startup (e/new-event 0 :spooling)
-        event-engine (eg/add-new-event (eg/new-event-engine max-sim-duration-time) startup)
+        event-engine (e/add-event (eg/new-event-engine max-sim-duration-time) startup)
         memory (m/new-memory 1000)
         processor (p/new-processor)
         io (io/mew-io)]
