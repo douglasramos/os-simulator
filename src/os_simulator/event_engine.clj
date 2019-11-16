@@ -70,9 +70,9 @@
 (defn execute
   "Execute the event engine by one iteration and return a new
   event engine that represents the new state os the simulation"
-  [event-engine]
+  [event-engine memory processor io]
   (let [current-event (next-event event-engine)
         event-engine (current-event->handled-list event-engine)
         key-word (:type current-event)
         action (key-word get-action)]
-    (action event-engine)))
+    (action [event-engine memory processor io])))

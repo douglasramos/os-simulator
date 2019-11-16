@@ -1,6 +1,6 @@
 (ns os-simulator.disk)
 
-(def num-jobs 5)
+(def num-jobs 10)
 
 (defn random-pos-int
   "generate randomly a positive int number"
