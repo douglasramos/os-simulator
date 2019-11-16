@@ -21,10 +21,13 @@
   [event-engine]
   (peek (:events event-engine)))
 
-(defn next-event
-  "Return the next event"
-  [event-engine]
-  (get-first-event event-engine))
+(defn set-current-event
+  [event-engine event]
+  (assoc event-engine :current-event event))
+
+(defn set-current-time
+  [event-engine current-time]
+  (assoc event-engine :current-time current-time))
 
 (defn event->handled-list
   "add event to handled events list"
@@ -44,9 +47,14 @@
         (remove-first-event)
         (event->handled-list event))))
 
-(defn set-current-event
-  [event-engine event]
-  (assoc event-engine :current-event event))
+(defn next-event
+  "Return a new event-engine a new current-event state"
+  [event-engine]
+  (let [current-event (get-first-event event-engine)]
+    (-> event-engine
+        (set-current-event current-event)
+        (current-event->handled-list)
+        (set-current-time (:time current-event)))))
 
 ;(def get-action
 ;  {:spooling          p/spooling
@@ -59,8 +67,8 @@
 ;  )
 
 (def get-action
-  {:spooling          p/spooling
-   :job-scheduling m/job-scheduling
+  {:spooling             p/spooling
+   :job-scheduling       m/job-scheduling
    :processor-allocation m/processor-allocation})
 
 ;; TODO improve this method. Make more clear
@@ -68,10 +76,7 @@
   "Execute the event engine by one iteration and return a new
   event engine that represents the new state os the simulation"
   [event-engine memory processor io]
-  (let [current-event (next-event event-engine)
-        event-engine (-> event-engine
-                         (set-current-event current-event)
-                         (current-event->handled-list))
-        key-word (:type current-event)
+  (let [event-engine (next-event event-engine)
+        key-word (get-in event-engine [:current-event :type])
         action (key-word get-action)]
     (action [event-engine memory processor io])))
