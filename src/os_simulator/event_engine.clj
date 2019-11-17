@@ -2,12 +2,20 @@
   (:require [os-simulator.processor :as p]
             [os-simulator.memory :as m]))
 
+(defn get-next-event
+  "return the first event from the events list"
+  [event-engine]
+  (peek (:events event-engine)))
+
+(defn get-next-current-time
+  [event-engine]
+  (:time (get-next-event event-engine)))
+
 (defn sim-ended?
   "returns if the simulation has ended"
   [event-engine]
-  (or (>= (:current-time event-engine) (:duration event-engine))
-      (empty? (:events event-engine))))
-
+  (or (empty? (:events event-engine))
+      (>= (get-next-current-time event-engine) (:duration event-engine))))
 
 (defn new-event-engine [max-duration]
   {:duration       max-duration
@@ -15,11 +23,6 @@
    :events         ()
    :handled-events []
    :jobs           []})
-
-(defn get-first-event
-  "return the first event from the events list"
-  [event-engine]
-  (peek (:events event-engine)))
 
 (defn set-current-event
   [event-engine event]
@@ -42,7 +45,7 @@
 (defn current-event->handled-list
   "move the current-event (first on list) to the handled event list"
   [event-engine]
-  (let [event (get-first-event event-engine)]
+  (let [event (get-next-event event-engine)]
     (-> event-engine
         (remove-first-event)
         (event->handled-list event))))
@@ -50,7 +53,7 @@
 (defn next-event
   "Return a new event-engine a new current-event state"
   [event-engine]
-  (let [current-event (get-first-event event-engine)]
+  (let [current-event (get-next-event event-engine)]
     (-> event-engine
         (set-current-event current-event)
         (current-event->handled-list)
@@ -69,7 +72,8 @@
 (def get-action
   {:spooling             p/spooling
    :job-scheduling       m/job-scheduling
-   :processor-allocation m/processor-allocation})
+   :cpu-allocation       p/cpu-allocation
+   :job-execution        p/job-execution})
 
 ;; TODO improve this method. Make more clear
 (defn execute

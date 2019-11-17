@@ -5,6 +5,9 @@
   [event-engine id]
   (first (filter #(= (:id %) id) (:jobs event-engine))))
 
+(defn update-time-left
+  [job current-time]
+  (update job :time-left - (- current-time (:last-start-time job))))
 
 (defn current-event->job
   "Return the job associated with the current-event of a event-engine"

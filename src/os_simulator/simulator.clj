@@ -3,16 +3,21 @@
             [os-simulator.event :as e]
             [os-simulator.memory :as m]
             [os-simulator.processor :as p]
-            [os-simulator.io :as io]))
+            [os-simulator.io :as io]
+            [clojure.pprint :as pp]))
 
-(def max-sim-duration-time 20)
+(def max-sim-duration-time 100)
 
-(defn loop-sim
+(defn loop-sim!
   "Execute simulation loop and return the sim results "
-  [event-engine memory processor io]
-  (if (eg/sim-ended? event-engine)
-    event-engine
-    (apply loop-sim (eg/execute event-engine memory processor io))))
+  [count event-engine memory processor io]
+  (do
+    (println (str "\nIteration: " count ))
+    (pp/print-table (:events event-engine))
+    (if (eg/sim-ended? event-engine)
+      event-engine
+      (apply loop-sim! (inc count) (eg/execute event-engine memory processor io)))))
+
 
 (defn automatic-run []
   "Mode 1: runs a simulation with a auto-generated jobs
@@ -22,8 +27,7 @@
         memory (m/new-memory 1000)
         processor (p/new-processor)
         io (io/mew-io)]
-    (println (loop-sim event-engine memory processor io))
-    (println "\nBye Bye \uD83D\uDE0E")))
+    (loop-sim! 1 event-engine memory processor io)))
 
 (defn step-run []
   "Mode 2: runs a simulation step-by-step wit

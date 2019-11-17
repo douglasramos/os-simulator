@@ -9,7 +9,7 @@
   []
   {:current-job {} :queue []})
 
-
+(def legal {:sim "sim" :nao "nao"})
 
 (defn get-jobs-events
   "Return a list of events from the job list.
@@ -39,8 +39,59 @@
       jobs)
     (into [new-event-engine] rest)))
 
-;(defn job-scheduling
-;  "Schedule the current job to be allocated to the memory"
-;  [[event-engine & rest]]
-;  (let [job (j/current-event->job event-engine)]
-;    ()))
+
+(defn start-job
+  "Starts a job execution"
+  [job current-time]
+  (assoc job :last-start-time current-time))
+
+(defn next-exec-event-time
+  [current-time process-time io-op]
+  (+ current-time (/ process-time (+ 1 io-op))))
+
+(defn add-exec-event
+  [event-engine job]
+  (e/add-new-event event-engine
+                   (next-exec-event-time (:current-time event-engine)
+                                         (:process-time job)
+                                         (:io-operations job))
+                   :job-execution
+                   (:id job)))
+(defn remove-job-events
+  "Returns a new events list without the next job events"
+  [events job-id]
+  (filter #(or (not= (:job-id %) job-id) false) events))
+
+(defn remove-exec-events
+  "Remove all io events related to a job from the
+  event-engine event list"
+  [eg job-id]
+  (assoc eg :events (remove-job-events (:events eg) job-id)))
+
+;; TODO  make this functions small
+(defn cpu-allocation
+  "Allocate a job on the processor"
+  [[eg memory cpu & rest]]
+  (let [job (j/current-event->job eg)]
+    (if (empty? (:current-job cpu))
+      ;; if
+      (let [new-cpu (assoc cpu :current-job (start-job job (:current-time eg)))
+            new-eg (add-exec-event eg job)]
+        (into [new-eg memory new-cpu ] rest))
+      (if (>= (:priority job) (get-in cpu [:current-job :priority]))
+        ;; else if
+        (let [new-cpu (-> cpu
+                          (update :queue conj (:current-job cpu))
+                          (assoc :current-job (start-job job (:current-time eg))))
+              new-eg (-> eg
+                         (remove-exec-events (get-in [:current-job :id] cpu))
+                         (add-exec-event job))]
+          (into [new-eg memory new-cpu] rest))
+        ;; else
+        (into [eg memory (update cpu :queue conj job)] rest)))))
+
+
+(defn job-execution
+  "Start the job execution on the processor"
+  [[event-engine & rest]]
+  (into [event-engine] rest))

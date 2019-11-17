@@ -9,7 +9,7 @@
 
 (defn random-io-op-quantity
   []
-  (random-pos-int 10))
+  (rand-int 5))
 
 (defn random-size
   []
@@ -28,14 +28,16 @@
 (defn new-job-random
   "Create a new job with random information"
   [id]
-  (let [start-time (random-start-time)]
+  (let [start-time (random-start-time)
+        io-op-quantity (random-io-op-quantity)]
     (-> {}
         (assoc :id id)
         (assoc :priority (random-priority))
         (assoc :last-start-time start-time)
+        (assoc :process-time (* (+ io-op-quantity 1) 10))
         (assoc :time-left start-time)
         (assoc :mem-size (random-size))
-        (assoc :io-operations (random-io-op-quantity)))))
+        (assoc :io-operations io-op-quantity))))
 
 (defn get-jobs
   "return a list of auto-generated jobs"

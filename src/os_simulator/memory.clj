@@ -27,7 +27,7 @@
   (let [job (j/current-event->job eg)]
     (if (> (:available-space memory) (:mem-size job))
       ;; true
-      (let [new-eg (e/add-new-event eg (:current-time eg) :processor-allocation (:id job))
+      (let [new-eg (e/add-new-event eg (:current-time eg) :cpu-allocation (:id job))
             new-mem (decrease-available-space memory (:mem-size job))]
         (into [new-eg new-mem] rest))
       ;; false
@@ -53,12 +53,12 @@
       (update :queue pop)))
 
 (defn allocate-until-available
-  "Allocate job on the que(ue to the memory until available
+  "Allocate job on the queue to the memory until available
   generating new eg events to the processor allocation"
   [eg memory]
   (if (can-move? memory)
     ;;true
-    (let [new-eg (e/add-new-event eg (:current-time eg) :processor-allocation
+    (let [new-eg (e/add-new-event eg (:current-time eg) :cpu-allocation
                                   (:id (j/current-event->job eg)))
           new-memory (queue->memory memory)]
       (allocate-until-available new-eg new-memory))
