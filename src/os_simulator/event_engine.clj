@@ -1,6 +1,7 @@
 (ns os-simulator.event-engine
   (:require [os-simulator.processor :as p]
-            [os-simulator.memory :as m]))
+            [os-simulator.memory :as m]
+            [os-simulator.io :as io]))
 
 (defn get-next-event
   "return the first event from the events list"
@@ -22,7 +23,8 @@
    :current-time   0
    :events         ()
    :handled-events []
-   :jobs           []})
+   :jobs           []
+   :current-job    {}})
 
 (defn set-current-event
   [event-engine event]
@@ -50,37 +52,35 @@
         (remove-first-event)
         (event->handled-list event))))
 
+(defn set-current-job
+  [eg current-event]
+  (assoc eg :current-job (when-let [job-id (:job-id current-event)]
+                           (nth (:jobs eg) job-id))))
+
 (defn next-event
   "Return a new event-engine a new current-event state"
   [event-engine]
   (let [current-event (get-next-event event-engine)]
     (-> event-engine
         (set-current-event current-event)
+        (set-current-job current-event)
         (current-event->handled-list)
         (set-current-time (:time current-event)))))
 
-;(def get-action
-;  {:spooling          p/spooling
-;   :job-scheduling    p/job-scheduling
-;   :memory-allocation m/memory-allocation
-;   :cpu-execution
-;                      :disk-release
-;   :io-interruption
-;                      :job-finishing}
-;  )
-
 (def get-action
-  {:spooling             p/spooling
-   :job-scheduling       m/job-scheduling
-   :cpu-allocation       p/cpu-allocation
-   :job-execution        p/job-execution})
+  {:spooling        p/spooling!
+   :job-scheduling  m/job-scheduling
+   :proc-scheduling p/cpu-allocation
+   :job-execution   p/job-execution
+   :io-interruption io/io-interruption
+   :release-disk    io/release-disk
+   :job-complete    m/job-finishing})
 
-;; TODO improve this method. Make more clear
 (defn execute
   "Execute the event engine by one iteration and return a new
   event engine that represents the new state os the simulation"
   [event-engine memory processor io]
   (let [event-engine (next-event event-engine)
-        key-word (get-in event-engine [:current-event :type])
-        action (key-word get-action)]
+        type (get-in event-engine [:current-event :type])
+        action (type get-action)]
     (action [event-engine memory processor io])))

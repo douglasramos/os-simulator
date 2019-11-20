@@ -19,22 +19,40 @@
       (println "2) Step by Step (Jobs from .txt)")
       (get-input)))
 
+(defn handle-trace-mode!
+  "Get input from user that tell if tracing is necessary"
+  []
+  (do (println "\nTracing? [Y/n]")
+      (case (get-input)
+        "y" true
+        "n" false
+        true)))
+
 (defn print-results!
   [eg]
   (do
     (println "\nSimulation Events:")
     (pp/print-table [:time :job-id :type] (:handled-events eg))
-    (println "\nRemaining Events:")
-    (pp/print-table [:time :job-id :type] (:events eg))
-    (println "\nBye Bye \uD83D\uDE0E")))
+    (when (not-empty (:events eg))
+      (println "\nRemaining Events:")
+      (pp/print-table [:time :job-id :type] (:events eg)))
+    (println "Bye Bye \uD83D\uDE0E")))
 
+(defn handle-more-options!
+  "Get an input to show more result info"
+  [eg]
+  (do (println "\nMore Options")
+      (println "JOB <job-id> - Shows all events from a job")
+      (println "JT - shows all jobs time duration")
+      (get-input)))
 (defn sim-results
   "Run a simulation based on the use input and return the results"
   []
-  (let [sim-mode (handle-sim-mode!)]
+  (let [sim-mode (handle-sim-mode!)
+        tracing? (handle-trace-mode!)]
     (case sim-mode
-      "1" (sim/automatic-run)
-      "2" (sim/step-run)
+      "1" (sim/automatic-run tracing?)
+      "2" (sim/step-run tracing?)
       (println "Invalid option. Sorry! \uD83D\uDE2B"))))
 
 (defn -main

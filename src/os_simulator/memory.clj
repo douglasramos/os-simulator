@@ -24,10 +24,10 @@
 (defn job-scheduling
   "Memory Allocation event handler (2)"
   [[eg memory & rest]]
-  (let [job (j/current-event->job eg)]
+  (let [job (:current-job eg)]
     (if (> (:available-space memory) (:mem-size job))
       ;; true
-      (let [new-eg (e/add-new-event eg (:current-time eg) :cpu-allocation (:id job))
+      (let [new-eg (e/add-new-event eg (:current-time eg) :proc-scheduling  (:id job))
             new-mem (decrease-available-space memory (:mem-size job))]
         (into [new-eg new-mem] rest))
       ;; false
@@ -58,17 +58,17 @@
   [eg memory]
   (if (can-move? memory)
     ;;true
-    (let [new-eg (e/add-new-event eg (:current-time eg) :cpu-allocation
-                                  (:id (j/current-event->job eg)))
+    (let [new-eg (e/add-new-event eg (:current-time eg) :proc-scheduling
+                                  (:id (:current-job eg)))
           new-memory (queue->memory memory)]
       (allocate-until-available new-eg new-memory))
     ;;false
     [eg memory]))
 
-(defn processor-allocation
-  "Processor allocation event handler (3)"
+(defn job-finishing
+  "Job finishing and memory release"
   [[eg memory & rest]]
-  (let [job (j/current-event->job eg)
+  (let [job (:current-job eg)
         mem (increase-available-space memory (:mem-size job))
         [new-eg new-mem] (allocate-until-available eg mem)]
     (into [new-eg new-mem] rest)))

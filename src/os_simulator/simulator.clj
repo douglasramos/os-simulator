@@ -6,20 +6,21 @@
             [os-simulator.io :as io]
             [clojure.pprint :as pp]))
 
-(def max-sim-duration-time 100)
+(def max-sim-duration-time 300)
 
 (defn loop-sim!
   "Execute simulation loop and return the sim results "
-  [count event-engine memory processor io]
+  [tracing? count event-engine memory processor io]
   (do
-    (println (str "\nIteration: " count ))
-    (pp/print-table (:events event-engine))
+    (when tracing?
+      (println (str "\nIteration: " count))
+      (pp/print-table (:events event-engine)))
     (if (eg/sim-ended? event-engine)
       event-engine
-      (apply loop-sim! (inc count) (eg/execute event-engine memory processor io)))))
+      (apply loop-sim! tracing? (inc count) (eg/execute event-engine memory processor io)))))
 
 
-(defn automatic-run []
+(defn automatic-run [tracing?]
   "Mode 1: runs a simulation with a auto-generated jobs
   and runs without user interaction"
   (let [startup (e/new-event 0 :spooling)
@@ -27,9 +28,9 @@
         memory (m/new-memory 1000)
         processor (p/new-processor)
         io (io/mew-io)]
-    (loop-sim! 1 event-engine memory processor io)))
+    (loop-sim! tracing? 1 event-engine memory processor io)))
 
-(defn step-run []
+(defn step-run [tracing?]
   "Mode 2: runs a simulation step-by-step wit
   jobs fetched from disk.txt. User interaction is allowed between steps"
   )
